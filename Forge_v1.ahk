@@ -1,46 +1,49 @@
 ﻿running := false
+showToolTips := true
 
-F8::
+F6::
 {
-    ToolTip "Starting mining"
-    Sleep (1000)
-    ToolTip
+    SimulateRotation()
+}
+
+F7::
+{
+    ShowToolTip("Start clicking", 1000)
 
     global running
+
     if (running)  ; prevent double-start
         return
 
     running := true
     startTime := A_TickCount
-    duration := 60000  ; 1 minute
-
-    keys := ["a", "s", "d"]
+    duration := 120000  ; 2 minutes
     
     while (running && A_TickCount - startTime < duration)
-    {        
-        Click
+    {
+        SendMouseClick()
         Sleep Random(300, 500)
-        
-        if (Mod(A_TickCount, 10) == 0)
-        {
-            SimulateMovement(keys)
-        }
+    }
 
-        else if(Mod(A_TickCount, 11) == 0)
-        {
-            rotationCount := Random(3, 5)
-            SimulateRotation(rotationCount)
-        }
+    running := false
+}
 
-        else if(Mod(A_TickCount, 12) == 0)
-        {
-            SimulateAfk(1000, 2500)
-        }
-        
-        else if(Mod(A_TickCount, 20) == 0)
-        {
-            SimulateAfk(3500, 5000)
-        }
+F8::
+{
+    ShowToolTip("Start mining", 1000)
+
+    global running
+
+    if (running)  ; prevent double-start
+        return
+
+    running := true
+    startTime := A_TickCount
+    duration := 600000  ; 10 minutes
+    
+    while (running && A_TickCount - startTime < duration)
+    {
+        SimulateMining(A_TickCount)
     }
 
     running := false
@@ -51,62 +54,108 @@ F9::
     global running
     running := false
 
-    ToolTip "Aborting"
-    Sleep(1000)
-    ToolTip
+    ShowToolTip("Aborting", 1000)
 }
 
 F10::ExitApp
 
-SimulateMovement(keys)
+SimulateMining(tickCount)
 {
-    ToolTip "Simulating movement"
-    Sleep (1000)
-    ToolTip
+    SendMouseClick()
+    Sleep Random(500, 700)
+    
+    if (Mod(tickCount, 33) == 0)
+    {
+        ;SimulateMovement()
+    }
+    else if(Mod(tickCount, 31) == 0)
+    {
+        SimulateRotation()
+    }
+    else if(Mod(tickCount, 11) == 0)
+    {
+        ;SimulateJump()
+    }
 
-    holdTimeSimulated := Random(150, 250)
+    if(Mod(tickCount, 25) == 0)
+    {
+        SimulateAfk(3500, 4500)
+    }
+    else if(Mod(tickCount, 13) == 0)
+    {
+        SimulateAfk(1000, 1500)
+    }
+}
+
+SimulateMovement()
+{
+    ShowToolTip("Simulating movement", 1000)
+
+    movementDelayMin := 100
+    movementDelayMax := 300
+
+    keys := ["a", "s", "d"]
+
+    holdTimeSimulated := Random(250, 350)
 
     firstMovement := keys[Random(1, keys.Length)]
     secondMovement := OppositeMovement(firstMovement)
 
     HoldKeyDown(firstMovement, holdTimeSimulated)
+    Sleep Random(movementDelayMin, movementDelayMax)
+
     HoldKeyDown(secondMovement, holdTimeSimulated)
+    Sleep Random(movementDelayMin, movementDelayMax)
 
     ; Fix position orientation to be facing forward
-    holdTimePositionFix := Random(250, 350)
+    SimulateRotation()
+}
 
-    HoldKeyDown("s", holdTimePositionFix)
-    HoldKeyDown("w", holdTimePositionFix)
+SimulateJump()
+{
+    ShowToolTip("Simulating jump", 1000)
+    HoldKeyDown("Space", 5)
 }
 
 SimulateAfk(randomLow, randomHigh)
 {
     randomDelay := Random(randomLow, randomHigh)
 
-    ToolTip "Simulating AFK " . randomDelay . " ms"
-
-    Sleep(randomDelay)
-
-    ToolTip
+    ShowToolTip("Simulating AFK " . randomDelay . " ms", randomDelay)
 }
 
-SimulateRotation(count)
+SimulateRotation()
 {
-    ToolTip "Simulating " . count . " rotations"
-    Sleep (1000)
-    ToolTip
+    ShowToolTip("Simulating rotation", 1000)
 
-    for i, _ in 1..count
-    {
-        ToolTip "Rotation " . i . " of " . count
-        Sleep(500)
-        ToolTip
-    }
+    rotationKeys := ["d", "s", "a", "w", "d"]
+
+    holdKeyTime := 8
+    holdKeyCount := 8
     
-    ;holdTimeRotation := Random(100, 200)
+    for index, key in rotationKeys
+    {
+        i := 1
 
-    ;HoldKeyDown("a", holdTimeRotation)
-    ;HoldKeyDown("d", holdTimeRotation)
+        ; Last rotation should be held shorted for forward facing
+        if(index == rotationKeys.Length)
+        {
+            while(i <= 50)
+            {
+                Send(key)
+                i++
+                Sleep Random(1, 10)
+            }
+        }
+        else if()
+        {
+            while(i <= holdKeyCount)
+            {
+                HoldKeyDown(key, holdKeyTime)    
+                i++
+            }
+        }
+    }
 }
 
 OppositeMovement(key)
@@ -130,9 +179,26 @@ OppositeMovement(key)
     }
 }
 
+SendMouseClick()
+{
+    Click
+}
+
 HoldKeyDown(key, duration)
 {
     Send "{" key " down}"
     Sleep duration
     Send "{" key " up}"
+}
+
+ShowToolTip(message, duration)
+{
+    global showToolTips
+
+    if (showToolTips)
+    {
+        ToolTip message
+        Sleep duration
+        ToolTip
+    }
 }
