@@ -7,17 +7,8 @@ class Fish
 {
     static u := Utils(Config.showToolTips)
 
-    __New()
-    {
-        this.state := 0 ; 0 = idle, 1 = throwing, 2 = reeling
-    }
-
     static FishZoomFix()
     {
-        this.state := 1
-
-        u.ShowToolTip("State " . this.state, 1000)
-
         Loop 10 
         {
             Send "{WheelUp}"
@@ -52,12 +43,37 @@ class Fish
     FishReel()
     {
         u.ShowToolTip("Reeling", 1000)
+
+        reelReady := false
+
+        Loop 20
+        {
+            reelCheckColor := u.GetColorRgbAt(Config.reelReadyCheckX, Config.reelReadyCheckY)
+
+            colorMatches := u.ColorMatch(reelCheckColor, Config.reelReadyColor, Config.reelReadyColorTolerance)
+
+            if (colorMatches)
+            {
+                return true
+            }
+
+            Sleep 500
+        }
+
+        u.ShowToolTip("Reeling failed", 1000)
+        return false
     }
 
     Fish()
     {
         this.FishToolFix()
         this.FishThrow()
-        this.FishReel()
+
+        reeled := this.FishReel()
+
+        if (!reeled)
+            return
+
+        u.ShowToolTip("Fish reeled in!", 1000)
     }
-}
+}15

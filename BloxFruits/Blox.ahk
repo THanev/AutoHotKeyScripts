@@ -9,6 +9,12 @@ running := false
 
 u := Utils(Config.showToolTips)
 
+F1::
+{
+    color := u.GetColorRgbAtMousePos()
+    MsgBox "MouseX: " color.mouseX " Y: " color.mouseY " R=" color.r " G=" color.g " B=" color.b
+}
+
 +1::
 {
     u.ShowToolTip("Start attacking", 500)
